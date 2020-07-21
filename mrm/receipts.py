@@ -1,4 +1,6 @@
 from mrm.monzo import Monzo
+from mrm.models import Receipt, Item, SubItem, Tax, Payment, Merchant
+from mrm.serializers import ReceiptSchema
 from pprint import pprint as pp
 from prettytable import PrettyTable
 from distutils.util import strtobool
@@ -7,6 +9,7 @@ import humanize
 
 
 client = Monzo()
+
 
 # List Account and ask user to pick one!
 accounts = client.list_accounts()
@@ -72,44 +75,73 @@ print(transactions_table)
 
 
 transaction = client.get_transaction(input("ID of transaction you want to add a receipts to: ")).data
-receipt = {}
-receipt['transaction_id'] = transaction.get('id')
-receipt['external_id'] = input("Receipt Number: ")
-receipt['total'] = int(input("Total in pennies: "))
-receipt['currency'] = input("Currency (e.g: GBP): ")
-receipt['items'] = []
-done_adding_items = False
-while not done_adding_items:
-    if len(receipt['items']) == 0:
-        print('This is required! ')
-    print(f"Item {len(receipt['items'])+1}")
-    item = {}
-    item['description'] = input("Description: ")
-    item['amount'] = int(input("Amount in pennies: "))
-    item['currency'] = input("Currency (e.g: GBP): ")
-    item['quantity'] = float(input("Quantity: "))
-    item['unit'] = input("Unit: ")
-    receipt['items'].append(item)
+receipt = Receipt(
+    transaction = transaction.get('id'),
+    receipt_id = input("Receipt Number: "),
+    total = int(input("Total in pennies: ")),
+    currency = input("Currency (e.g: GBP): "),
+)
+while True:
+    print(f"Item {len(receipt.items)+1}")
+    item = Item(
+        description = input("Description: "),
+        amount = int(input("Amount in pennies: ")),
+        currency = input("Currency (e.g: GBP): "),
+        quantity = float(input("Quantity: ")),
+        unit = input("Unit: "),
+        tax = int(input("Tax in pennies: ")),
+    )
+    receipt.add_item(item)
     if not strtobool(input("Do you want to add more items? (y/n)\n").lower()):
-        done_adding_items = True
+        break
 
 if strtobool(input("Do you have tax information to add? (y/n)\n").lower()):
-    print("Taxes not currently supported.")
+    while True:
+        print(f"Tax item {len(receipt.taxes)+1}")
+        tax = Tax(
+            description = input("Description: "),
+            amount = int(input("Amount in pennies: ")),
+            currency = input("Currency (e.g: GBP): "),
+        )
+        receipt.add_tax(tax)
+        if not strtobool(input("Do you want to add more items? (y/n)\n").lower()):
+            break
 
 if strtobool(input("Do you have payment information to add? (y/n)\n").lower()):
-    print("Payments not currently supported.")
+    while sum([x.amount for x in receipt.payments]) < receipt.total:
+        print(f"Payment method {len(receipt.payments)+1}, {receipt.total-sum([x.amount for x in receipt.payments])} remaining")
+        payment = Payment(
+            type = input("Payment type (choices: card, cash, gift_card): "),
+            amount = int(input("Amount in pennies: ")),
+            currency = input("Currency (e.g: GBP): "),
+        )
+        if payment.type == 'card':
+            payment.last_four = input("Last four digits of card: ")
+        elif payment.type == 'gift_card':
+            payment.gift_card_type = input("Type of gift card or coupon")
+        receipt.add_payment(payment)
 
 if strtobool(input("Do you have merchant information to add? (y/n)\n").lower()):
-    print("Merchant info not currently supported.")
+    merchant = Merchant(
+        name=input("Name: "),
+        online=strtobool(input("Online (y/n): ")),
+        phone=input("Phone: "),
+        email=input("Email: "),
+        store_name=input("Branch: "),
+        store_address=input("Address (without postcode): "),
+        store_postcode=input("Postcode: ")
+    )
+    receipt.set_merchant(merchant)
 
-pp(receipt)
+schema = ReceiptSchema()
+pp(schema.dump(receipt))
 
 if strtobool(input("Does this look right? (y/n)\n")):
-    receipt = client.create_reciept(receipt)
-    if receipt:
+    receipt_r = client.create_reciept(receipt)
+    if receipt_r:
         print('All ok!')
     else:
         print('Failure')
-        print(receipt.data)
+        print(receipt_r.data)
 else:
     exit()

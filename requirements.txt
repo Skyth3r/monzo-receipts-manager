@@ -2,3 +2,4 @@ requests
 PrettyTable
 python-dateutil
 humanize
+marshmallow
