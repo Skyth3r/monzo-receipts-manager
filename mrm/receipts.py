@@ -66,7 +66,7 @@ def create_reciept(params: dict):
     method = 'PUT'
     headers = get_headers()
     r = requests.request(method, url, headers=headers, json=params)
-    return r.status_code == 200
+    return (r.status_code == 200, None if r.status_code == 200 else r.json())
 
 
 # List Account and ask user to pick one!
@@ -166,9 +166,10 @@ pp(receipt)
 
 if strtobool(input("Does this look right? (y/n)\n")):
     receipt = create_reciept(receipt)
-    if receipt:
+    if receipt[0]:
         print('All ok!')
     else:
         print('Failure')
+        print(receipt[1])
 else:
     exit()
