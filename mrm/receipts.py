@@ -1,5 +1,5 @@
 from mrm.monzo import Monzo
-from mrm.models import Receipt, Item, SubItem, Tax, Payment, Merchant
+from mrm.models import Receipt, Item, Tax, Payment, Merchant
 from mrm.serializers import ReceiptSchema
 from pprint import pprint as pp
 from prettytable import PrettyTable
@@ -76,20 +76,20 @@ print(transactions_table)
 
 transaction = client.get_transaction(input("ID of transaction you want to add a receipts to: ")).data
 receipt = Receipt(
-    transaction = transaction.get('id'),
-    receipt_id = input("Receipt Number: "),
-    total = int(input("Total in pennies: ")),
-    currency = input("Currency (e.g: GBP): "),
+    transaction=transaction.get('id'),
+    receipt_id=input("Receipt Number: "),
+    total=int(input("Total in pennies: ")),
+    currency=input("Currency (e.g: GBP): "),
 )
 while True:
     print(f"Item {len(receipt.items)+1}")
     item = Item(
-        description = input("Description: "),
-        amount = int(input("Amount in pennies: ")),
-        currency = input("Currency (e.g: GBP): "),
-        quantity = float(input("Quantity: ")),
-        unit = input("Unit: "),
-        tax = int(input("Tax in pennies: ")),
+        description=input("Description: "),
+        amount=int(input("Amount in pennies: ")),
+        currency=input("Currency (e.g: GBP): "),
+        quantity=float(input("Quantity: ")),
+        unit=input("Unit: "),
+        tax=int(input("Tax in pennies: ")),
     )
     receipt.add_item(item)
     if not strtobool(input("Do you want to add more items? (y/n)\n").lower()):
@@ -99,9 +99,9 @@ if strtobool(input("Do you have tax information to add? (y/n)\n").lower()):
     while True:
         print(f"Tax item {len(receipt.taxes)+1}")
         tax = Tax(
-            description = input("Description: "),
-            amount = int(input("Amount in pennies: ")),
-            currency = input("Currency (e.g: GBP): "),
+            description=input("Description: "),
+            amount=int(input("Amount in pennies: ")),
+            currency=input("Currency (e.g: GBP): "),
         )
         receipt.add_tax(tax)
         if not strtobool(input("Do you want to add more items? (y/n)\n").lower()):
@@ -111,9 +111,9 @@ if strtobool(input("Do you have payment information to add? (y/n)\n").lower()):
     while sum([x.amount for x in receipt.payments]) < receipt.total:
         print(f"Payment method {len(receipt.payments)+1}, {receipt.total-sum([x.amount for x in receipt.payments])} remaining")
         payment = Payment(
-            type = input("Payment type (choices: card, cash, gift_card): "),
-            amount = int(input("Amount in pennies: ")),
-            currency = input("Currency (e.g: GBP): "),
+            type=input("Payment type (choices: card, cash, gift_card): "),
+            amount=int(input("Amount in pennies: ")),
+            currency=input("Currency (e.g: GBP): "),
         )
         if payment.type == 'card':
             payment.last_four = input("Last four digits of card: ")

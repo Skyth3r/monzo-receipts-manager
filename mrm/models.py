@@ -1,5 +1,4 @@
 class SubItem:
-    
     def __init__(self, description: str, amount: int, currency: str = 'GBP', quantity: int = None, unit: str = '', tax: int = None):
         self.description = description
         self.amount = amount
@@ -10,7 +9,6 @@ class SubItem:
 
 
 class Item:
-    
     def __init__(self, description: str, amount: int, currency: str = 'GBP', quantity: int = 1, unit: str = '', tax: int = None):
         self.description = description
         self.amount = amount
@@ -26,7 +24,6 @@ class Item:
 
 
 class Tax:
-    
     def __init__(self, description: str, amount: int, currency: str = 'GBP', tax_number: str = None):
         self.description = description
         self.amount = amount
@@ -35,7 +32,6 @@ class Tax:
 
 
 class Payment:
-    
     def __init__(self, type: str, amount: int, currency: str = 'GBP', last_four: str = None, gift_card_type: str = None, **kwargs):
         self.type = type
         assert self.type in ('card', 'cash', 'gift_card')
@@ -47,7 +43,6 @@ class Payment:
 
 
 class Merchant:
-    
     def __init__(self, name: str, online: bool, phone: str, email: str, store_name: str, store_address: str, store_postcode: str):
         self.name = name
         self.online = online
@@ -59,7 +54,6 @@ class Merchant:
 
 
 class Receipt:
-    
     def __init__(self, transaction: str, receipt_id: str, total: int, currency: str = 'GBP'):
         self.transaction = transaction
         self.receipt_id = receipt_id

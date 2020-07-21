@@ -4,7 +4,6 @@ import json
 import os
 
 class APIResponse:
-    
     def __init__(self, r, key: str = None):
         self.r = r
         self.status = self.r.status_code
@@ -22,8 +21,6 @@ class APIResponse:
 
 
 class Monzo:
-    
-    
     def __init__(self):
         self.client_id = os.environ['MONZO_CLIENT_ID']
         self.client_secret = os.environ['MONZO_CLIENT_SECRET']
@@ -39,14 +36,12 @@ class Monzo:
         _url += '/'
         return _url
     
-    
     def list_accounts(self):
         url = self._build_url('accounts')
         method = 'GET'
         headers = self._build_headers()
         r = requests.request(method, url, headers=headers)
         return APIResponse(r, 'accounts')
-    
     
     def read_balance(self, account_id: str):
         url = self._build_url('balance')
@@ -56,7 +51,6 @@ class Monzo:
         r = requests.request(method, url, headers=headers, params=params)
         return APIResponse(r)
     
-    
     def list_pots(self, account_id: str):
         url = self._build_url('pots')
         method = 'GET'
@@ -64,7 +58,6 @@ class Monzo:
         params = {'current_account_id': account_id}
         r = requests.request(method, url, headers=headers, params=params)
         return APIResponse(r, 'pots')
-    
     
     def pot_deposit(self, pot_id: str, account_id: str, amount: int, snowflake: str):
         url = self._build_url('pots', pot_id, 'deposit')
@@ -74,7 +67,6 @@ class Monzo:
         r = requests.request(method, url, headers=headers, data=data)
         return APIResponse(r)
     
-    
     def pot_withdraw(self, pot_id: str, account_id: str, amount: int, snowflake: str):
         url = self._build_url('pots', pot_id, 'withdraw')
         method = 'PUT'
@@ -83,14 +75,12 @@ class Monzo:
         r = requests.request(method, url, headers=headers, data=data)
         return APIResponse(r)
     
-    
     def get_transaction(self, transaction_id: str):
         url = self._build_url('transactions', transaction_id)
         method = 'GET'
         headers = self._build_headers(**{'expand[]': 'merchant'})
         r = requests.request(method, url, headers=headers)
         return APIResponse(r, 'transaction')
-    
     
     def list_transactions(self,
         account_id: str,
@@ -115,7 +105,6 @@ class Monzo:
         r = requests.request(method, url, headers=headers, params=params)
         return APIResponse(r, 'transactions')
     
-    
     def annotate_transaction(self, transaction_id: str, **kwargs):
         url = self._build_url('transactions', transaction_id)
         method = 'PATCH'
@@ -123,16 +112,14 @@ class Monzo:
         data = {f'metadata[{x}]': y for x, y in kwargs.items()}
         r = requests.request(method, url, headers=headers, data=data)
         return APIResponse(r, 'transaction')
-
-
+    
     def create_reciept(self, reciept: dict):
         url = self._build_url('transaction-receipts')
         method = 'PUT'
         headers = self._build_headers()
         r = requests.request(method, url, headers=headers, json=reciept)
         return APIResponse(r)
-
-
+    
     def get_reciept(self, receipt_id: str):
         url = self._build_url('transaction-receipts')
         method = 'GET'
@@ -142,8 +129,7 @@ class Monzo:
         }
         r = requests.request(method, url, headers=headers, params=params)
         return APIResponse(r, 'receipt')
-
-
+    
     def delete_reciept(self, receipt_id: str):
         url = self._build_url('transaction-receipts')
         method = 'DELETE'
