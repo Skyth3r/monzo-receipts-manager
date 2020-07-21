@@ -1,79 +1,19 @@
-import datetime
-import requests
-import json
-import os
+from mrm.monzo import Monzo
 from pprint import pprint as pp
 from prettytable import PrettyTable
 from distutils.util import strtobool
 from dateutil.parser import parse
 import humanize
 
-MONZO_API_BASE = 'https://api.monzo.com'
 
-MONZO_CLIENT_ID = os.environ['MONZO_CLIENT_ID']
-MONZO_CLIENT_SECRET = os.environ['MONZO_CLIENT_SECRET']
-
-MONZO_TOKEN = json.loads(os.environ['MONZO_TOKEN'])
-
-
-def get_headers(**kwargs):
-    kwargs['Authorization'] = "Bearer " + MONZO_TOKEN['access_token']
-    return kwargs
-
-
-def list_accounts():
-    url = MONZO_API_BASE+'/accounts/'
-    method = 'GET'
-    headers = get_headers()
-    r = requests.request(method, url, headers=headers)
-    return r.json().get('accounts')
-
-
-def list_transactions(
-    account_id: str,
-    since: datetime.datetime = None,
-    before: datetime.datetime = None,
-):
-    url = MONZO_API_BASE + '/transactions/'
-    method = 'GET'
-    if not since:
-        since = (
-            datetime.datetime.utcnow().astimezone()-datetime.timedelta(days=7)
-            )
-    if not before:
-        before = datetime.datetime.utcnow().astimezone()
-    headers = get_headers()
-    params = {
-        'account_id': account_id,
-        'since': since.isoformat(),
-        'before': before.isoformat()
-    }
-    print(f"Loading transactions between {since} and {before}")
-    r = requests.request(method, url, headers=headers, params=params)
-    return r.json().get('transactions')
-
-
-def get_transaction(transaction_id: str):
-    url = MONZO_API_BASE+'/transactions/'+transaction_id
-    method = 'GET'
-    headers = get_headers(**{'expand[]': 'merchant'})
-    r = requests.request(method, url, headers=headers)
-    return r.json().get('transaction')
-
-
-def create_reciept(params: dict):
-    url = MONZO_API_BASE+'/transaction-receipts/'
-    method = 'PUT'
-    headers = get_headers()
-    r = requests.request(method, url, headers=headers, json=params)
-    return (r.status_code == 200, None if r.status_code == 200 else r.json())
-
+client = Monzo()
 
 # List Account and ask user to pick one!
-accounts = list_accounts()
-if accounts is None:
+accounts = client.list_accounts()
+if not accounts:
     print('Please authorize us in your app!')
     exit()
+
 accounts_table = PrettyTable(
     [
         '',
@@ -84,7 +24,7 @@ accounts_table = PrettyTable(
         'Active',
     ]
 )
-for option, acct in (enumerate(accounts)):
+for option, acct in (enumerate(accounts.data)):
     accounts_table.add_row(
         [
             option,
@@ -96,17 +36,17 @@ for option, acct in (enumerate(accounts)):
         ]
     )
 print(accounts_table)
-account = accounts[int(input("Please choose an account from above: "))]
+account = accounts.data[int(input("Please choose an account from above: "))]
 
 # Load Tranactions
 
 print(f"Loading transactions from the past week for account_id `{account.get('id')}`")
-transactions = list_transactions(account.get('id'))
-if len(transactions) == 0:
+transactions = client.list_transactions(account.get('id'))
+if len(transactions.data) == 0:
     print("No transactions found! Exiting!")
     exit()
 else:
-    print(f"{len(transactions)} transactions found")
+    print(f"{len(transactions.data)} transactions found")
 transactions_table = PrettyTable(
     [
         'ID',
@@ -117,7 +57,7 @@ transactions_table = PrettyTable(
         'Datetime'
     ]
 )
-for transaction in transactions:
+for transaction in transactions.data:
     transactions_table.add_row(
         [
             transaction.get('id'),
@@ -131,7 +71,7 @@ for transaction in transactions:
 print(transactions_table)
 
 
-transaction = get_transaction(input("ID of transaction you want to add a receipts to: "))
+transaction = client.get_transaction(input("ID of transaction you want to add a receipts to: ")).data
 receipt = {}
 receipt['transaction_id'] = transaction.get('id')
 receipt['external_id'] = input("Receipt Number: ")
@@ -165,11 +105,11 @@ if strtobool(input("Do you have merchant information to add? (y/n)\n").lower()):
 pp(receipt)
 
 if strtobool(input("Does this look right? (y/n)\n")):
-    receipt = create_reciept(receipt)
-    if receipt[0]:
+    receipt = client.create_reciept(receipt)
+    if receipt:
         print('All ok!')
     else:
         print('Failure')
-        print(receipt[1])
+        print(receipt.data)
 else:
     exit()
