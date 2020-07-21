@@ -1,13 +1,8 @@
 
-# Created by https://www.toptal.com/developers/gitignore/api/flask
-# Edit at https://www.toptal.com/developers/gitignore?templates=flask
+# Created by https://www.toptal.com/developers/gitignore/api/python
+# Edit at https://www.toptal.com/developers/gitignore?templates=python
 
-### Flask ###
-instance/*
-!instance/.gitignore
-.webassets-cache
-
-### Flask.Python Stack ###
+### Python ###
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -73,6 +68,7 @@ db.sqlite3-journal
 
 # Flask stuff:
 instance/
+.webassets-cache
 
 # Scrapy stuff:
 .scrapy
@@ -140,4 +136,4 @@ dmypy.json
 # pytype static type analyzer
 .pytype/
 
-# End of https://www.toptal.com/developers/gitignore/api/flask
+# End of https://www.toptal.com/developers/gitignore/api/python
