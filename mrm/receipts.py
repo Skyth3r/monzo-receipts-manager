@@ -4,6 +4,7 @@ import json
 import os
 from pprint import pprint as pp
 from prettytable import PrettyTable
+from distutils.util import strtobool
 from dateutil.parser import parse
 import humanize
 
@@ -108,7 +109,7 @@ else:
     print(f"{len(transactions)} transactions found")
 transactions_table = PrettyTable(
     [
-        '',
+        'ID',
         'Description',
         'Amount',
         'Currency',
@@ -116,10 +117,10 @@ transactions_table = PrettyTable(
         'Datetime'
     ]
 )
-for option, transaction in enumerate(transactions):
+for transaction in transactions:
     transactions_table.add_row(
         [
-            option,
+            transaction.get('id'),
             transaction.get('description'),
             transaction.get('amount')/100,
             transaction.get('currency'),
@@ -128,3 +129,46 @@ for option, transaction in enumerate(transactions):
         ]
     )
 print(transactions_table)
+
+
+transaction = get_transaction(input("ID of transaction you want to add a receipts to: "))
+receipt = {}
+receipt['transaction_id'] = transaction.get('id')
+receipt['external_id'] = input("Receipt Number: ")
+receipt['total'] = int(input("Total in pennies: "))
+receipt['currency'] = input("Currency (e.g: GBP): ")
+receipt['items'] = []
+done_adding_items = False
+while not done_adding_items:
+    if len(receipt['items']) == 0:
+        print('This is required! ')
+    print(f"Item {len(receipt['items'])+1}")
+    item = {}
+    item['description'] = input("Description: ")
+    item['amount'] = int(input("Amount in pennies: "))
+    item['currency'] = input("Currency (e.g: GBP): ")
+    item['quantity'] = float(input("Quantity: "))
+    item['unit'] = input("Unit: ")
+    receipt['items'].append(item)
+    if not strtobool(input("Do you want to add more items? (y/n)\n").lower()):
+        done_adding_items = True
+
+if strtobool(input("Do you have tax information to add? (y/n)\n").lower()):
+    print("Taxes not currently supported.")
+
+if strtobool(input("Do you have payment information to add? (y/n)\n").lower()):
+    print("Payments not currently supported.")
+
+if strtobool(input("Do you have merchant information to add? (y/n)\n").lower()):
+    print("Merchant info not currently supported.")
+
+pp(receipt)
+
+if strtobool(input("Does this look right? (y/n)\n")):
+    receipt = create_reciept(receipt)
+    if receipt:
+        print('All ok!')
+    else:
+        print('Failure')
+else:
+    exit()
